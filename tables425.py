@@ -1,4 +1,4 @@
-from modulo import *
+from matmod import *
 
 def ciphertable(m):
     """
@@ -35,12 +35,12 @@ def rel_prime(M):
     N = []
     powers = []
     for n in range(m):
-        if gcd(n,m)==1:
+        if gcd_bss(n,m)==1:
             N = N + [n]
             powers = powers + [ [[x^n for x in X]] |mod| M ]
     for n in N: print '%2s :'%n, powers[N.index(n)]
     
-def gcd(a,b):
+def gcd_bss(a,b):
     if b == 0:
         return a
     while b >> 0:
