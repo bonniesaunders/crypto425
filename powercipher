@@ -1,0 +1,9 @@
+from ciphers425 import *
+
+def power(message,key):
+    A = message.alphabet
+    mod = len(A)
+    enc_message = Message('',A)
+    for char in message:
+        num = A.index(char) |mod| mod
+        enc_message += A[ (num**key).lift() ]
