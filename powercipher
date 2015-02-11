@@ -6,4 +6,4 @@ def power(message,key):
     enc_message = Message('',A)
     for char in message:
         num = A.index(char) |mod| mod
-        enc_message += A[ (num**key).lift() ]
+        enc_message += A[ (num**key).lift() ] 
