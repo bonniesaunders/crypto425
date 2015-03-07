@@ -9,20 +9,21 @@ class Timer():
    def __enter__(self): self.start = time.time()
    def __exit__(self, *args): print time.time() - self.start
 
-def xlog(alpha,beta,N):
+def log_bf(alpha,beta,N):
     '''
-WARNING: bad code.  Computes log base alpha of beta with modulus N
-by computing every possibility.  Computes alpha**k inefficiently.
+Computes log base alpha of beta with modulus N
+by computing every possibility.
 '''
     with Timer():
        for k in range(N):
            if alpha**k == beta: return k
        return 'no log'
 
-def log_bf(alpha,beta,N):
+def log_bf2(alpha,beta,N):
     '''
     Brute Force method computes the discrete log base alpha of beta with modulus N
-    by checking every possible alpha**x.
+    by checking every possible alpha**x. Computes alpha**x slower than log_bf.
+
 '''
     with Timer():
        y = 1 |mod| beta.mod()
@@ -98,10 +99,10 @@ def log_bday(alpha,beta,p,r):
     with Timer():
         K = set(sample(xrange(p),r))
     with Timer():
-       tests = { (alpha**k).lift():k for k in K }
+       tests = { (alpha**k):k for k in K }
     count = 1
     for l in L:
-        y = (beta*alpha**(-l)).lift()
+        y = (beta*alpha**(-l))
         if y in tests: return count, (tests[y]+l)|mod|(p-1)
         count += 1
         if count % 10000 == 0: print count
@@ -121,13 +122,10 @@ def log_bday2(alpha,beta,p,r):
     with Timer():
         L = set(sample(xrange(p),r))
     with Timer():
-        y = 1 |mod| p
-        for k in range(r):
-            tests[y.lift()] = k
-            y = y*alpha
+        tests = { (alpha**k):k for k in xrange(r) }
     count = 1
     for l in L:
-        y = (beta*alpha**(-l)).lift()
+        y = (beta*alpha**(-l))
         if y in tests: return count, (tests[y]+l)|mod|(p-1)
         count += 1
         if count % 10000 == 0: print count
