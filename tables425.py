@@ -12,9 +12,9 @@ def multitable(N):
     """
     prints out entire multiplication table mod N
     """
-    for m in range(N):
+    for m in range(1,N):
         print '{:3}:'.format(m),
-        for n in range(N):
+        for n in range(1,N):
             print '{:2}'.format(m*n % N),
         print
 
@@ -23,15 +23,15 @@ def powerrow(n,M):
     row = [[x^n for x in X]] |mod|M 
     print '%2s :'%n, row
 
-def powertable(M):
-    X = [x |mod| M for x in range(M)]
-    powers = [ [[x^n for x in X]]|mod|M for n in range(M) ]
-    for n in range(M): print '%2s :'%n, powers[n]
+def powertable(M,N):
+    X = [x |mod| M for x in range(1,M)]
+    powers = [ [[x^n for x in X]]|mod|M for n in range(N) ]
+    for n in range(N): print '%2s :'%n, powers[n]
 
 
 def rel_prime(M):
     X = [x |mod| M for x in range(M)]
-    m = Mod(M).gen.phi()
+    m = Matmod(M).gen.phi()
     N = []
     powers = []
     for n in range(m):

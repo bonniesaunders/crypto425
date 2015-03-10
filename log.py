@@ -3,7 +3,6 @@ from cypari.gen import *
 from math import exp
 from random import randint, sample
 
-
 import time
 
 class Timer():
@@ -15,20 +14,22 @@ def xlog(alpha,beta,N):
 WARNING: bad code.  Computes log base alpha of beta with modulus N
 by computing every possibility.  Computes alpha**k inefficiently.
 '''
-    for k in range(N):
-        if alpha**k == beta: return k
-    return 'no log'
+    with Timer():
+       for k in range(N):
+           if alpha**k == beta: return k
+       return 'no log'
 
 def log_bf(alpha,beta,N):
     '''
     Brute Force method computes the discrete log base alpha of beta with modulus N
     by checking every possible alpha**x.
 '''
-    y = 1 |mod| beta.mod()
-    for x in range(N):
-        if y == beta: return x
-        y = y*alpha
-    return 'no log less than {}'.format(N)
+    with Timer():
+       y = 1 |mod| beta.mod()
+       for x in xrange(N):
+           if y == beta: return x, y
+           y = y*alpha
+       return 'no log less than {}'.format(N)
 
 def log(alpha,beta,p):
     '''
@@ -40,19 +41,40 @@ def log(alpha,beta,p):
     N = (p.sqrt().truncate() + 1)
     tests = {}
     y = 1 |mod| p
+    print 'N = ', N
     with Timer():
-        for k in range(N):
-            tests[y.lift()] = k
+       for k in xrange(N):
+            tests[y] = k
             y = y*alpha
-    y = beta
-    a = alpha**(-N)
-    count = 1
-    for l in range(0,N**2,N):
-        if y.lift() in tests:
-           return count, (l+tests[y.lift()])|mod| (p-1)
-        y = y*a
-        count += 1
-    return 'no log found for ',beta
+       y = beta
+       a = alpha**(-N)
+       count = 1
+       for l in xrange(0,N**2,N):
+           if y in tests:
+              return count, (l+tests[y])|mod| (p-1)
+           y = y*a
+           count += 1
+       return 'no log found for ',beta
+
+def log2(alpha,beta,p):
+    '''
+    uses a BabyStep-GiantStep approach to find the
+    discrete log base alpha of beta with modulus p
+    alpha is primitive root mod p, a prime number
+    beta is mod p
+    '''
+    N = (p.sqrt().truncate() + 1)
+    with Timer():
+       tests = { alpha**k : k for k in xrange(N)}
+       y = beta
+       a = alpha**(-N)
+       count = 1
+       for l in xrange(0,N**2,N):
+           if y in tests:
+              return count, (l+tests[y])|mod| (p-1)
+           y = y*a
+           count += 1
+       return 'no log found for ',beta
 
 def prob_match_approx(r,N):
     return (1.-exp(-r**2/(2*float(N))))

@@ -164,7 +164,7 @@ class Message(str):
       Returns string of 2-digit integer for each character in text.
       """
       return ''.join(
-        ['%.2d'%z for z in self.to_integers ])
+        ['%.2d'%z for z in self.to_integers() ])
 
   def frequencies(self):
     alphabet = self.alphabet
