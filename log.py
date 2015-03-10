@@ -19,45 +19,7 @@ by computing every possibility.
            if alpha**k == beta: return k
        return 'no log'
 
-def log_bf2(alpha,beta,N):
-    '''
-    Brute Force method computes the discrete log base alpha of beta with modulus N
-    by checking every possible alpha**x. Computes alpha**x slower than log_bf.
-
-'''
-    with Timer():
-       y = 1 |mod| beta.mod()
-       for x in xrange(N):
-           if y == beta: return x, y
-           y = y*alpha
-       return 'no log less than {}'.format(N)
-
 def log(alpha,beta,p):
-    '''
-    uses a BabyStep-GiantStep approach to find the
-    discrete log base alpha of beta with modulus p
-    alpha is primitive root mod p, a prime number
-    beta is mod p
-    '''
-    N = (p.sqrt().truncate() + 1)
-    tests = {}
-    y = 1 |mod| p
-    print 'N = ', N
-    with Timer():
-       for k in xrange(N):
-            tests[y] = k
-            y = y*alpha
-       y = beta
-       a = alpha**(-N)
-       count = 1
-       for l in xrange(0,N**2,N):
-           if y in tests:
-              return count, (l+tests[y])|mod| (p-1)
-           y = y*a
-           count += 1
-       return 'no log found for ',beta
-
-def log2(alpha,beta,p):
     '''
     uses a BabyStep-GiantStep approach to find the
     discrete log base alpha of beta with modulus p
@@ -67,6 +29,7 @@ def log2(alpha,beta,p):
     N = (p.sqrt().truncate() + 1)
     with Timer():
        tests = { alpha**k : k for k in xrange(N)}
+       print tests
        y = beta
        a = alpha**(-N)
        count = 1
@@ -75,6 +38,7 @@ def log2(alpha,beta,p):
               return count, (l+tests[y])|mod| (p-1)
            y = y*a
            count += 1
+           print count, y
        return 'no log found for ',beta
 
 def prob_match_approx(r,N):
