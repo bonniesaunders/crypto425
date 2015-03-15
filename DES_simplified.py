@@ -77,10 +77,11 @@ class DESint(int):
             return DESint( int( Sbox[0][L>>3][L&7],2) , 3 ).cat( DESint( int( Sbox[1][R>>3][R&7],2) , 3 ) )
             
       def f(self,key):
-# This function maps 6 bits words to 6 bits words and is the core of the DES algorithm
-# First, the word is expanded to 8 bits via E,
-# XORed with a 8 bit word derived from the key
-# finally reduced to 6 bits via the Sbox
+            '''This function maps 6 bits words to 6 bits words and
+is the core of the DES algorithm
+First, the word is expanded to 8 bits via E,
+then XORed with a 8 bit word derived from the key
+finally reduced to 6 bits via the Sbox'''
             length = self.E()._len           
             X = DESint( self.E() ^ key , length)
             return X.S()
@@ -120,6 +121,7 @@ class Key(DESint):
                   self.keys += [ DESint(key,roundlength) ]
                   step += 1
             return
+
 
 def DES12(input,K,rounds=4):
       # Encrypts any character string by converting each character in the string to a 12 bit DESint
