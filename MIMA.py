@@ -27,23 +27,23 @@ def MIMA(m,c,key1 = range(2**9),key2 = range(2**9)):
     return k1,k2
 
 def TWODES12(input,K1,K2,rounds=4):
-      '''
-Performs double DES on a message string.  Each character is a block of 12 bits
-'''
-      # Encrypts any character string by converting each character in the string to a 12 bit DESint
-      out = ''
-      for char in input:
-            out += str(DESint(ord(char)).enc(K1,rounds).enc(K2,rounds) )
-      return out
+    '''
+    Performs double DES on a message string.  Each character is a block of 12 bits
+    Encrypts any character string by converting each character in the string to a 12 bit DESint
+    '''
+    out = ''
+    for char in input:
+        out += str(DESint(ord(char)).enc(K1,rounds).enc(K2,rounds) )
+    return out
 
 def TWODES12_d(output,K1,K2,rounds=4):
-      '''
-Decrypts the TWODES12
-'''
-      # Decrypts a string of bits, 12 bits at a time
-      decrypted = ''
-      nbits = len(output)
-      for n in range(0,nbits,12):
-            I = DESint(int(output[n:n+12],2))
-            decrypted += chr( I.dec(K2,rounds).dec(K1,rounds) )
-      return decrypted
+    '''
+    Decrypts the TWODES12
+    Decrypts a string of bits, 12 bits at a time
+    '''
+    decrypted = ''
+    nbits = len(output)
+    for n in range(0,nbits,12):
+        I = DESint(int(output[n:n+12],2))
+        decrypted += chr( I.dec(K2,rounds).dec(K1,rounds) )
+    return decrypted

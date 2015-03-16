@@ -65,29 +65,32 @@ class DESint(int):
       # these methods could change and you'd still have an encryption scheme. Whether or
       # not it would be harder or easier to break is the trick.
       def E(self):
-# The expander: length of self should be 6, E returns a 8 bit word
+            '''The expander: length of self should be 6, E returns a 8 bit word
+            '''
             if self._len != 6: raise ValueError("Only expands 6 bits to 8 bits")
             x = self
             return DESint ( (x&3)+((x&8)>>1)+((x&12)<<1)+((x&4)<<3)+((x&48)<<2) , 8 )
 
       def S(self):
-# Maps 8 bits to 6 bits via the Sbox
+            '''Maps 8 bits to 6 bits via the Sbox'''
             L = self.L()
             R = self.R()
             return DESint( int( Sbox[0][L>>3][L&7],2) , 3 ).cat( DESint( int( Sbox[1][R>>3][R&7],2) , 3 ) )
             
       def f(self,key):
             '''This function maps 6 bits words to 6 bits words and
-is the core of the DES algorithm
-First, the word is expanded to 8 bits via E,
-then XORed with a 8 bit word derived from the key
-finally reduced to 6 bits via the Sbox'''
+            is the core of the DES algorithm
+            First, the word is expanded to 8 bits via E,
+            then XORed with a 8 bit word derived from the key
+            finally reduced to 6 bits via the Sbox
+            '''
             length = self.E()._len           
             X = DESint( self.E() ^ key , length)
             return X.S()
       
       def round(self,R,K,step):
-# performs one round of the simplified DES algorithm with the key starting at the stepth place.
+            '''performs one round of the simplified DES algorithm with the key starting at the stepth place.
+            '''
             L = self
             return R, DESint(L^(R.f(K.keys[step])),6)
 
@@ -124,14 +127,14 @@ class Key(DESint):
 
 
 def DES12(input,K,rounds=4):
-      # Encrypts any character string by converting each character in the string to a 12 bit DESint
+      '''Encrypts any character string by converting each character in the string to a 12 bit DESint'''
       out = ''
       for char in input:
             out += str(DESint(ord(char)).enc(K,rounds) )
       return out
 
 def DES12_d(output,K,rounds=4):
-      # Decrypts a string of bits, 12 bits at a time
+      '''Decrypts a string of bits, 12 bits at a time.'''
       decrypted = ''
       nbits = len(output)
       for n in range(0,nbits,12):
