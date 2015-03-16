@@ -26,20 +26,22 @@ def log(alpha,beta):
     uses a BabyStep-GiantStep approach to find the
     discrete log base alpha of beta with modulus p
     alpha is primitive root mod p, a prime number
-    beta is mod p. Search for x = k+jN so alpha**x = beta.
+    beta is any number less than p.
+    Search for k, j so that alpha**k = beta*alpha**-(jN).
+    Then x = k+jN is the solution.
     '''
     p = alpha.mod()
     N = (pari(p).sqrt().truncate() + 1)
     with Timer():
        tests = { alpha**k : k for k in xrange(N)}
-       # print tests
-       y = beta
+       #print tests
+       y = beta |mod| p
        a = alpha**(-N)
     with Timer():
        for jN in xrange(0,N**2,N):
-           # print 'jN =', jN, y
+           #print 'jN =', jN, y
            if y in tests:
-              # print 'k = ', tests[y], 'jN =', jN
+              #print 'k = ', tests[y], 'jN =', jN
               return (jN+tests[y])|mod| (p-1)
            y = y*a
        return 'no log found for ',beta
