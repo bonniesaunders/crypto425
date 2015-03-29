@@ -35,9 +35,9 @@ def log(alpha,beta):
     with Timer():
        tests = { alpha**k : k for k in xrange(N)}
        #print tests
+    with Timer():
        y = beta |mod| p
        a = alpha**(-N)
-    with Timer():
        for jN in xrange(0,N**2,N):
            #print 'jN =', jN, y
            if y in tests:
@@ -47,7 +47,7 @@ def log(alpha,beta):
        return 'no log found for ',beta
 
 def prob_match_approx(r,N):
-    return (1.-exp(-r**2/(2*float(N))))
+    return (1.-exp(-r**2/(float(N))))
 
 def prob_match(r,N):
     p = 1.
@@ -66,16 +66,16 @@ def log_bday(alpha,beta,r):
     tests = {}
     with Timer():
         J = set(sample(xrange(p),r))
-    with Timer():
         K = set(sample(xrange(p),r))
     with Timer():
        tests = { (alpha**k):k for k in K }
-    count = 1
-    for j in J:
-        y = (beta*alpha**(-j))
-        if y in tests: return (tests[y]+j)|mod|(p-1)
-        count += 1
-        if count % 10000 == 0: print count
+    with Timer():
+       count = 1
+       for j in J:
+           y = (beta*alpha**(-j))
+           if y in tests: return (tests[y]+j)|mod|(p-1)
+           count += 1
+           if count % 10000 == 0: print count
     return count, False
 
 def log_bday2(alpha,beta,r):

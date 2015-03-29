@@ -38,8 +38,9 @@ class Poly:
         self.bin = bin(integer)[2:]
         self.int = int(integer)
         self.hex = hex(integer)[2:]
-        self.oct = oct(integer)[2:]
+        self.oct = oct(integer)[1:]
         self.vector = [ int(char) for char in self.bin ]
+        
 
     def __repr__(self):
         if self.int == 0: return '0'
@@ -99,11 +100,14 @@ class Poly:
         return s
 
     def __call__(self,x):
-        return eval(str(self).replace('^','**'))
+        return eval(str(self).replace('^','**'))%self.mod
 
     def __div__(self,other):
         return self.divmod(other)[0]
-        
+
+    def GFrep(self,n):
+        return '0'*(n-self.degree-1) + self.bin
+
     def inverse(self,mod):
         g,n,m = self.xgcd(mod)
         if g == 1: return n
@@ -309,34 +313,48 @@ def genGF2(gen,mod):
         i+=1
     print '{0:4}: {1:4} {1:0{2}b}'.format(i,y.int,n),y       
 
-def multitable(mod):
+def multitable(polymod):
     """
-    prints out entire multiplication table mod N
+    prints out entire polynomial multiplication by poly mod table
+    elements are represented as Z/N
     """
-    n = mod.degree
+    n = polymod.degree
     N = 2**n 
     for m in range(1,N):
         print '{:3}:'.format(m),
-        print ' '.join( [ '{:3}'.format(Poly(m).GFmult(Poly(n),mod).int) for n in range(1,N) ] )
+        print ' '.join( [ '{:3}'.format(Poly(m).GFmult(Poly(n),polymod).int) for n in range(1,N) ] )
 
-def multitablehex(mod):
+def multitablebin(polymod):
     """
-    prints out entire multiplication table mod N
+    prints out entire polynomial multiplication by poly mod table
+    elements are represented as Z/N
     """
-    n = mod.degree
+    n = polymod.degree
+    N = 2**n
+    for m in range(1,N):
+        print '{}:'.format(Poly(m).GFrep(n)),
+        print ' '.join( [ '{}'.format(Poly(m).GFmult(Poly(k),polymod).GFrep(n)) for k in range(1,N) ] )
+
+def multitablehex(polymod):
+    """
+    prints out entire polynomial multiplication by poly mod table
+    elements are represented in hex Z/N
+    """
+    n = polymod.degree
     N = 2**n 
     for m in range(1,N):
         print '{:02x}:'.format(m),
-        print ' '.join( [ '{:02x}'.format(Poly(m).GFmult(Poly(n),mod).int) for n in range(1,N) ] )
+        print ' '.join( [ '{:02x}'.format(Poly(m).GFmult(Poly(n),polymod).int) for n in range(1,N) ] )
 
-def powtable(mod):
+def powtable(polymod):
     """
-    prints out entire power table mod N
+    prints out entire polynomial power table
+    elements are represented as Z/N
     """
-    n = mod.degree
+    n = polymod.degree
     N = 2**n 
     for m in range(1,N):
         print '{:3}:'.format(m),
-        print ' '.join( [ '{:3}'.format(((Poly(n)**m) % mod ).int ) for n in range(1,N) ] )
+        print ' '.join( [ '{:3}'.format(((Poly(n)**m) % polymod ).int ) for n in range(1,N) ] )
 
 
