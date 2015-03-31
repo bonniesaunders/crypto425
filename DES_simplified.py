@@ -134,22 +134,46 @@ class Key(DESint):
                   step += 1
             return
 
+def string_to_number(string):
+    '''Each character in the string is replaced by it's ascii 2-hexdigit code.
+The resulting long string is interrupted as an hexadeciaml number and returned as an integer.
+'''
+    return int(string.encode('hex'),16)
 
-def DES12(input,K,rounds=4):
+s2n = string_to_number
+
+def DES12_b(Input,K,rounds=4):
       '''Encrypts any character string by coding each character in the string as a
-      12 bit DESint.  The output cannot be converted to a string with teh same scheme
-      because the initial bits will not be 0's.'''
+      12 bit DESint.  The output cannot be converted to a string with the same scheme
+      because the initial bits will not be 0's.
+      K is a Key, a DESint of lenth 9'''
       out = ''
-      for char in input:
+      n = s2n(Input)
+      length = len(bin(n))-2
+      start = 12 * length/12
+      while start > 0:
+            out += str(DESint(n>>start).enc(K,rounds) )
+            n = n-((n>>start)<<start )
+            #print n
+            start -= 12
+      return out
+
+def DES12(Input,K,rounds=4):
+      '''Encrypts any character string by coding each character in the string as a
+      12 bit DESint.  The output cannot be converted to a string with the same scheme
+      because the initial bits will not be 0's.
+      K is a Key, a DESint of lenth 9'''
+      out = ''
+      for char in Input:
             out += str(DESint(ord(char)).enc(K,rounds) )
       return out
 
-def DES12_d(output,K,rounds=4):
+def DES12_d(Output,K,rounds=4):
       '''Decrypts a string of bits, 12 bits at a time.'''
       decrypted = ''
-      nbits = len(output)
+      nbits = len(Output)
       for n in range(0,nbits,12):
-            I = DESint(int(output[n:n+12],2))
+            I = DESint(int(Output[n:n+12],2))
             decrypted += chr( I.dec(K,rounds) )
       return decrypted
 
