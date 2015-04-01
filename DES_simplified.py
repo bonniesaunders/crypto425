@@ -1,20 +1,4 @@
-'''
->>> I = DESint(int('011100100110',2))
->>> K = Key(int('0b011001010',2),9)
->>> O = I.enc(K,4)
->>> O
-010110001100
->>> O.dec(K,4)
-011100100110
->>> I
-011100100110
->>> encryptedsecret = DES12('thisisasecret',K)
->>> encryptedsecret
-'010111111011101101101100110000000000011010011010110000000000011010011010000101011111011010011010001101110100011111111000110001110011001101110100010111111011'
->>> DES12_d(encryptedsecret,K)
-'thisisasecret'
-
-'''
+from EZ425ES import *
 # This is the Sbox, determined by many factors but is the core of making
 # the DES algorithm hard to crack.  The order of the 3 bit words appear seems
 # arbitrary, but they are in fact carefully chosen.
@@ -134,48 +118,45 @@ class Key(DESint):
                   step += 1
             return
 
-def string_to_number(string):
-    '''Each character in the string is replaced by it's ascii 2-hexdigit code.
-The resulting long string is interrupted as an hexadeciaml number and returned as an integer.
-'''
-    return int(string.encode('hex'),16)
-
-s2n = string_to_number
-
-def DES12_b(Input,K,rounds=4):
-      '''Encrypts any character string by coding each character in the string as a
-      12 bit DESint.  The output cannot be converted to a string with the same scheme
-      because the initial bits will not be 0's.
-      K is a Key, a DESint of lenth 9'''
+def DES12_e(Input,K,rounds=4):
+      '''Encrypts any character string Input by blocking the string into
+      12-bit DESint.  Returns a number.
+      K is a Key, a DESint of lenth 9
+      '''
       out = ''
       n = s2n(Input)
       length = len(bin(n))-2
-      start = 12 * length/12
-      while start > 0:
-            out += str(DESint(n>>start).enc(K,rounds) )
+      if length % 12 == 0: start = length-12
+      else: start = 12 * (length/12)
+          #print start
+      while start >= 0:
+            temp = str(DESint(n>>start).enc(K,rounds) )
+            #print DESint(n>>start),temp
+            out += temp
             n = n-((n>>start)<<start )
             #print n
             start -= 12
-      return out
+      return int(out,2)
 
-def DES12(Input,K,rounds=4):
-      '''Encrypts any character string by coding each character in the string as a
-      12 bit DESint.  The output cannot be converted to a string with the same scheme
-      because the initial bits will not be 0's.
-      K is a Key, a DESint of lenth 9'''
+def DES12_d(number,K,rounds=4):
+      '''Decrypts a number chunking into
+      12-bit DESints.  Reuturns a message string.
+      K is the encryption Key, a DESint of lenth 9
+      '''
       out = ''
-      for char in Input:
-            out += str(DESint(ord(char)).enc(K,rounds) )
-      return out
-
-def DES12_d(Output,K,rounds=4):
-      '''Decrypts a string of bits, 12 bits at a time.'''
-      decrypted = ''
-      nbits = len(Output)
-      for n in range(0,nbits,12):
-            I = DESint(int(Output[n:n+12],2))
-            decrypted += chr( I.dec(K,rounds) )
-      return decrypted
+      n = number
+      length = len(bin(n))-2
+      if length % 12 == 0: start = length-12
+      else: start = 12 * (length/12)
+          #print start
+      while start >= 0:
+            temp = str(DESint(n>>start).dec(K,rounds) )
+            #print DESint(n>>start),temp
+            out += temp
+            n = n-((n>>start)<<start )
+            #print n
+            start -= 12
+      return n2s(int(out,2))
 
 def intSbox():
       return [ [ [ int(i,2) for i in j] for j in x ] for x in Sbox ]
