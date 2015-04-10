@@ -36,6 +36,9 @@ class DESint(int):
       
       def __len__(self):
             return self._len
+      def __xor__(self,other):
+            return DESint(int(self)^int(other),self._len)
+            
 
 # Then there are come untility methods
       def cat(self,other):
@@ -86,8 +89,10 @@ class DESint(int):
             L = self
             return R, DESint(L^(R.f(K.keys[step])),6)
 
-      # In the following note: differing from the book, a final switch of R and L is incorporated into the
-      # encryption algorithm.  This makes the decryption algorithm identical to encryption except for the
+      # In the following note: differing from the book,
+      #a final switch of R and L is incorporated into the
+      # encryption algorithm.  This makes the decryption algorithm
+      #identical to encryption except for the
       # order of the keys.
       def enc(self,K,rounds=4,decrypt=False):
             R = self.R()
@@ -118,7 +123,36 @@ class Key(DESint):
                   step += 1
             return
 
+
 def DES12_e(Input,K,rounds=4):
+      '''Encrypts any character string Input by blocking the string into
+      12-bit DESint.  Returns a number.
+      K is a Key, a DESint of lenth 9
+      '''
+      n = s2n(Input)
+      out,k = 0,0
+      while n > 0:
+            out =  out + ( DESint(n % 2**12).enc(K,rounds) << (12*k) )
+            #print k, bin(n), bin(out)
+            n = n >> 12
+            k +=1
+      return out
+
+def DES12_d(number,K,rounds=4):
+      '''Decrypts a number chunking into
+      12-bit DESints.  Returns a message string.
+      K is the encryption Key, a DESint of lenth 9
+      '''
+      n = number
+      out,k = 0,0
+      while n > 0:
+            out =  out + ( DESint(n % 2**12).dec(K,rounds) << (12*k) )
+            #print k, bin(n), bin(out)
+            n = n >> 12
+            k +=1
+      return n2s(out)
+
+def DES12_eold(Input,K,rounds=4):
       '''Encrypts any character string Input by blocking the string into
       12-bit DESint.  Returns a number.
       K is a Key, a DESint of lenth 9
@@ -130,15 +164,14 @@ def DES12_e(Input,K,rounds=4):
       else: start = 12 * (length/12)
           #print start
       while start >= 0:
-            temp = str(DESint(n>>start).enc(K,rounds) )
+            out += str(DESint(n>>start).enc(K,rounds) )
             #print DESint(n>>start),temp
-            out += temp
             n = n-((n>>start)<<start )
             #print n
             start -= 12
       return int(out,2)
 
-def DES12_d(number,K,rounds=4):
+def DES12_dold(number,K,rounds=4):
       '''Decrypts a number chunking into
       12-bit DESints.  Reuturns a message string.
       K is the encryption Key, a DESint of lenth 9
@@ -150,11 +183,8 @@ def DES12_d(number,K,rounds=4):
       else: start = 12 * (length/12)
           #print start
       while start >= 0:
-            temp = str(DESint(n>>start).dec(K,rounds) )
-            #print DESint(n>>start),temp
-            out += temp
+            out += str(DESint(n>>start).dec(K,rounds) )
             n = n-((n>>start)<<start )
-            #print n
             start -= 12
       return n2s(int(out,2))
 
