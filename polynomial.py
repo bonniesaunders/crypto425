@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 '''
 >>> key = State(0b0011001100001111)
 >>> rkeys = round_keys(wbytes(key))
@@ -30,7 +29,10 @@
 >>> S7
 0100 0010 1111 1110
 '''
-class Poly:   
+class Poly:
+    '''defines an elment in Z_2[x], a polynomial with coeficients in Zmod2
+which can be represented as a polynomial, an integer
+'''
     def __init__(self,integer,mod = 2):
         self.degree = len(bin(integer)[2:])-1
         if integer == 0: self.degree = -1
@@ -39,7 +41,7 @@ class Poly:
         self.int = int(integer)
         self.hex = hex(integer)[2:]
         self.oct = oct(integer)[1:]
-        self.vector = [ int(char) for char in self.bin ]
+        #self.vector = [ int(char) for char in self.bin ] 
         
 
     def __repr__(self):
@@ -53,10 +55,12 @@ class Poly:
         return ' + '.join(m)
     
     def __add__(self, other):
+        '''Addition is XOR'''
         if other is 1: other = Poly(1)
         return Poly(self.int ^ other.int)
 
     def __sub__(self,other):
+        '''mod 2 subtraction is the same as addition'''
         return self + other
 
     def __lshift__(self,other):
@@ -66,6 +70,7 @@ class Poly:
         return Poly(self.int >> other)
 
     def __getitem__(self,index):
+        '''returns coeficient on x^index'''
         return ( self.int >> index) & 1
 
     def __eq__(self,other):
@@ -82,6 +87,7 @@ class Poly:
         return result
 
     def __mod__(self,mod):
+        '''acts like % for polynomials'''
         n = mod.degree
         y = self
         m = y.degree
@@ -91,6 +97,9 @@ class Poly:
         return y
 
     def __mul__(self,other):
+        '''multiplication is polynomial multiplication and is accomplised by a
+        series of shifts and XOR's
+        '''
         n = self.degree + 1
         s = Poly(0)
         if other == 1: return self
@@ -103,17 +112,26 @@ class Poly:
         return eval(str(self).replace('^','**'))%self.mod
 
     def __div__(self,other):
-        return self.divmod(other)[0]
+        return self.DIVMOD(other)[0]
 
     def GFrep(self,n):
+        '''writes self as a binary string with n digits'''
         return '0'*(n-self.degree-1) + self.bin
 
     def inverse(self,mod):
-        g,n,m = self.xgcd(mod)
+        g,n,m = self.XGCD(mod)
         if g == 1: return n
         return 'no inverse'
 
-    def divmod(self,mod):
+    def vector(self,length):
+        return [ x for x in
+                 reversed(
+                     [0]*(length - self.degree -1)
+                     + [ int(char) for char in self.bin ]) ]
+
+    def DIVMOD(self,mod):
+        '''Z-2[x] is a division ring.  There is a division algorithm.
+The remainder has degree less than the divisor'''
         n = mod.degree
         y = self
         m = y.degree
@@ -124,27 +142,32 @@ class Poly:
             m = y.degree
         return d,y
 
+    def MOD(self,other):
+        return self.DIVMOD(other)[1]
+    
     def GFmult(self,other,mod=None):
         if not isinstance(mod,Poly): return self*other
-        n = self.degree+1
-        s = Poly(0)
-        for i in range(n):
-            if self[i]: s = ( s + (other<<i) ) % mod
-        return s
+##        n = self.degree+1
+##        s = Poly(0)
+##        for i in range(n):
+##            if self[i]: s = ( s + (other<<i) ) % mod
+        return (self*other).MOD(mod)
 
     def RotNyb(self):
         X4 = Poly(0b10000)
-        return self.divmod(X4)[0]+self.divmod(X4)[1]*X4
+        return self.DIVMOD(X4)[0]+self.DIVMOD(X4)[1]*X4
 
     def SubNyb(self):
         # 
         X4 = Poly(0b10000)
-        n1 = self.divmod(X4)[0]
-        n0 = self.divmod(X4)[1]
+        n1 = self.DIVMOD(X4)[0]
+        n0 = self.DIVMOD(X4)[1]
         return Sbox()[n1.int]*X4+Sbox()[n0.int]
 
-    def xgcd(self,B):
+    def XGCD(self,other):
+        '''Solves self*n+other*m = gcd(self,other)'''
         A = self
+        B = other
         a, b = A, B
         n1, m1, n, m = Poly(0), Poly(1), Poly(1), Poly(0)
         if B is 0:  return A, Poly(1), Poly(0)
@@ -152,7 +175,7 @@ class Poly:
         d = r.degree
         while d >= 0:
             g = r
-            q,r = a.divmod(b)
+            q,r = a.DIVMOD(b)
             n1,m1,n,m = n-q*n1,m-q*m1,n1,m1
             a, b = b, r
             d = r.degree
@@ -225,7 +248,7 @@ class Round(State):
 
     def __init__(self,integer,mod = 2):
         State.__init__(self,integer,mod,12)
-        L,R = self.divmod(Poly(64))
+        L,R = self.DIVMOD(Poly(64))
         self.L,self.R = State(L,2,6),State(R,2,6)
         
     def __repr__(self):
@@ -253,7 +276,7 @@ class Nybble(State):
 
     def S(self,i=1):
         S = self.Sbox
-        row,col = self.divmod(Poly(8))
+        row,col = self.DIVMOD(Poly(8))
         return S[i-1][row.int][col.int]
 
    
@@ -274,7 +297,7 @@ def RCON(i,pmod=Poly(0b10011)):
 
 def wbytes(key):
     X8 = Poly(0b100000000)
-    w = list(key.divmod(X8))
+    w = list(key.DIVMOD(X8))
     for i in range(2):
         w.append(w[2*i] + RCON(i+1) + w[2*i+1].RotNyb().SubNyb())
         w.append(w[2*i+1]+w[2*i+2])
@@ -294,7 +317,7 @@ def nybs(state,bits=4,power=3):
     b = [0 for n in range(bits)]
     r = state
     for i in range(power):
-        b[i],r = r.divmod(Y)
+        b[i],r = r.DIVMOD(Y)
         Y =  Y / X
     b[power]=r
     return b
@@ -302,6 +325,11 @@ def nybs(state,bits=4,power=3):
 def nybs_to_state(nybs):
     X4 = Poly(0b10000)
     return State(nybs[0]*(X4**3)+nybs[1]*(X4**2)+nybs[2]*X4+nybs[3])
+
+def listGF(n,f=Poly(1)):
+    for i in range(2**n):
+        t = f*Poly(i)
+        print '{0:{2}}: {1:0{2}b}'.format(i,t.int,n),t
 
 def genGF2(gen,mod):
     n = mod.degree
@@ -313,7 +341,28 @@ def genGF2(gen,mod):
         i+=1
     print '{0:4}: {1:4} {1:0{2}b}'.format(i,y.int,n),y       
 
-def multitable(polymod):
+
+def addtable(n):
+    """
+    prints out entire polynomial multiplication by poly mod table
+    elements are represented as Z/N
+    """
+    N = 2**n 
+    for m in range(1,N):
+        print '{:3}:'.format(m),
+        print ' '.join( [ '{:3}'.format((m+n)%N) for n in range(1,N) ] )
+
+def XORtable(n):
+    """
+    prints out entire polynomial multiplication by poly mod table
+    elements are represented as Z/N
+    """
+    N = 2**n 
+    for m in range(1,N):
+        print '{:3}:'.format(m),
+        print ' '.join( [ '{:3}'.format(m^n) for n in range(1,N) ] )
+
+def multitableint(polymod):
     """
     prints out entire polynomial multiplication by poly mod table
     elements are represented as Z/N
