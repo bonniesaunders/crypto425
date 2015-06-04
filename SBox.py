@@ -26,15 +26,15 @@ def column(L):
 
 a = Poly(0b11111)
 c = Poly(0b1100011)
-mod = rijndael_poly()    
+rij = rijndael_poly()    
 mod8 = Poly(0b100000001)
 
 def q(x):
     return (a*x+c).MOD(mod8)
 
 def SBox():
-    for r in range(16):
-        if r == 0: print [ q(0).hex]+[ q( Poly(r*16 + b).inverse(mod) ).hex.zfill(2) for b in range(1,16)]
-        else: print [ q( Poly(r*16 + b).inverse(mod) ).hex.zfill(2) for b in range(16)]
+    for R in range(16):
+        if R == 0: print [ q(0).hex]+[ q( Poly(R*16 + C).inverse(rij) ).hex.zfill(2) for C in range(1,16)]
+        else: print [ q( Poly(R*16 + C).inverse(rij) ).hex.zfill(2) for C in range(16)]
     return 'done'
             
