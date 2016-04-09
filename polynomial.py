@@ -30,7 +30,7 @@
 0100 0010 1111 1110
 '''
 class Poly:
-    '''defines an elment in Z_2[x], a polynomial with coeficients in Zmod2
+    '''defines an elment in Z_2[x], a polynomial with coefficients in Zmod2
 which can be represented as a polynomial, an integer
 '''
     def __init__(self,integer,mod = 2):
