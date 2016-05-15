@@ -3,7 +3,8 @@ try:
 except: pass
 
 A = 'YBRWY JFM N QCGYFR GIL SUZJX WJMFJ. NUJ VVL VBDM VS NUJ HRNAUGIEMIBI WBSMGFHGQS GJUFJX UNG. FTGRYCZJM GMYL TZSJLRI BVR U PMIVHY OJNJJYA F HVHERQ UAI U QNGR. OYFXY NQQNDM GTIX YBR SCPPYY-FZGJL NQF, VY QNX VVLARW. NUJ VVL VBDM YFOTMYQ FHQ QUHLBRI. IAJ XND USYYE OYFXY TWUOGYQ YBR SCPPYY, MCF KUGMYE YIBP BVR UFNXR FHQ XUVI, "DRXMR, YBBXY OTSF FLR RUXNHTKOA TZ LTO. GMYL YBVSE LTO QTHG PHBB NUJ XVRY VX QBWNU RIEJ NUFH GMY ANWXJF." WJMFJ AENHAJX NSX FFCQ, "IIAY QBWLL IUQ. N EATQ JMCPM CF BIEYB ZTLR. GOG NZ V YIBP NUJ XVRY, GMYL BIHQX FYIC IIVSA VY. MB KUE NPR HIYQYPYYQ $10 IIYQUEX."'
-eng_freq = [('e', 12.7), ('t', 9.1), ('a', 8.2), ('o', 7.5), ('i', 7), ('n', 6.8), ('s', 6.3), ('h', 6.1), ('r', 6), ('d', 4.3), ('l', 4), ('u', 2.8), ('c', 2.8), ('w', 2.4), ('m', 2.4), ('f', 2.2), ('y', 2), ('g', 2), ('p', 1.9), ('b', 1.5), ('v', 1), ('k', 0.8), ('x', 0.2), ('j', 0.2), ('z', 0.1), ('q', 0.1)]
+eng_freq = [('a', 8.2), ('b', 1.5), ('c', 2.8), ('d', 4.3), ('e', 12.7), ('f', 2.2), ('g', 2), ('h', 6.1), ('i', 7), ('j', 0.2), ('k', 0.8), ('l', 4), ('m', 2.4), ('n', 6.8), ('o', 7.5), ('p', 1.9), ('q', 0.1), ('r', 6), ('s', 6.3), ('t', 9.1), ('u', 2.8), ('v', 1), ('w', 2.4), ('x', 0.2), ('y', 2), ('z', 0.1)]
+ 
 ascii = ''.join([chr(x) for x in range(2**8)])
 
 class Message(str):
@@ -13,10 +14,13 @@ class Message(str):
   def __init__(self, message, alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ'):
       if isinstance(message,Message):alphabet = message.alphabet
       self.alphabet = alphabet
-      self.mod = len(alphabet)
+      self.modulus = len(alphabet)
       self.string = str(self)
       self.string_locations = {}
-      self.number = self.m2n()
+      if message == '':
+          self.m2n = 0
+      else:
+          self.number = self.m2n()
 
   def __repr__(self):
       return '*{}*'.format(self.string)
@@ -82,7 +86,7 @@ class Message(str):
 
   def change_alphabet(self,alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ'):
       self.alphabet = alphabet
-      self.mod = len(alphabet)
+      self.modulus = len(alphabet)
       return alphabet
 
   def good(self):
@@ -94,7 +98,7 @@ class Message(str):
       for x in self:
         if self.alphabet.rfind(x) == -1: bad = bad + [x]
       if len(bad) == 0: return True
-      return bad
+      return badm2n
 
   def strip(self):
       """
@@ -116,12 +120,11 @@ class Message(str):
                         if char in alphabet else char
                         for char in self]),newalphabet)    
 
-
   def message_to_number(self):
       '''Each character in the string is replaced by it's ascii 2-hexdigit code.
   The resulting long string is interrupted as an hexadeciaml number and returned as an integer.
   '''
-      return int(str(self).encode('hex'),16)
+      return int(self.string.encode('hex'),16)
 
   m2n = message_to_number
 
@@ -196,7 +199,7 @@ is more than 100 characters.  But it's good for classical ciphers.
       return ''.join(
         ['{:0{}d}'.format(z,n) for z in self.to_integers() ])
 
-  def frequencies(self,sortby= 1):
+  def frequencies(self,sortby= 0):
     alphabet = self.alphabet
     total = len(self)
     freq = [ ( x,round(float(self.count(x)) / total ,3) ) for x in alphabet]
@@ -222,8 +225,7 @@ Counts the number of coincidences in the text for each shift
     return groups
 
   def shift_correlation(self,group_freq,eng_freq):
-    m = self.mod
-    eng_freq = [('a', 8.2), ('b', 1.5), ('c', 2.8), ('d', 4.3), ('e', 12.7), ('f', 2.2), ('g', 2), ('h', 6.1), ('i', 7), ('j', 0.2), ('k', 0.8), ('l', 4), ('m', 2.4), ('n', 6.8), ('o', 7.5), ('p', 1.9), ('q', 0.1), ('r', 6), ('s', 6.3), ('t', 9.1), ('u', 2.8), ('v', 1), ('w', 2.4), ('x', 0.2), ('y', 2), ('z', 0.1)]
+    m = self.modulus
     return [ (j, sum([ group_freq[i][1]*eng_freq[(i+j)%m][1] for i in range(m) ]) ) for j in range(m) ]
 
 def number_to_message(number):

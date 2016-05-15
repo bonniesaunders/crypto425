@@ -1,6 +1,7 @@
 from matmod import *
 from messages import *
-
+eng_freq = [('a', 8.2), ('b', 1.5), ('c', 2.8), ('d', 4.3), ('e', 12.7), ('f', 2.2), ('g', 2), ('h', 6.1), ('i', 7), ('j', 0.2), ('k', 0.8), ('l', 4), ('m', 2.4), ('n', 6.8), ('o', 7.5), ('p', 1.9), ('q', 0.1), ('r', 6), ('s', 6.3), ('t', 9.1), ('u', 2.8), ('v', 1), ('w', 2.4), ('x', 0.2), ('y', 2), ('z', 0.1)]
+ 
 class Cipher:
 
   def encrypt(self, plaintext):
@@ -63,8 +64,8 @@ class AffineCipher(Cipher):
         transforms text by multiplying by m and then adding b
         """
         alphabet = message.alphabet
-        mod = message.mod
-        textlist=[alphabet[(m*alphabet.index(c)+b)% mod]
+        modulus = message.modulus
+        textlist=[alphabet[(m*alphabet.index(c)+b)% modulus]
                   if c in alphabet else c
                   for c in message]
         return Message(''.join(textlist),alphabet)   
@@ -81,8 +82,8 @@ class AffineCipher(Cipher):
         Decrypts ciphertext that was encrypted with affine cipher, key (m,b)
         """
         if not isinstance(message,Message): raise ValueError('bad Message')
-        gcd,minv,n = xgcd(self.m,message.mod)
-        if gcd != 1: raise ValueError('m is not relatively prime to mod')
+        gcd,minv,n = xgcd(self.m,message.modulus)
+        if gcd != 1: raise ValueError('m is not relatively prime to modulus')
         return self.affine(message,minv,-minv*self.b)
           
 class Caesar(AffineCipher):
@@ -101,11 +102,11 @@ class Caesar(AffineCipher):
         Prints out possible keys and decryptions of message with that key
         """
         alphabet = message.alphabet
-        mod = message.mod
-        for j in range(mod):
+        modulus = message.modulus
+        for j in range(modulus):
             newtext=''
             for i in range(len(message)):
-                newtext += alphabet[(alphabet.index(message[i])-j)%mod]
+                newtext += alphabet[(alphabet.index(message[i])-j)%modulus]
             print 'key = {:2}: '.format(j), newtext
 
 class SubstitutionCipher(Cipher):
@@ -154,7 +155,7 @@ class Vigenere(Cipher):
         char = textlist.pop(0)     
         if char in alphabet:
           B = alphabet.index(key[count%kl])
-          newtext += alphabet[(alphabet.index(char) + B) % message.mod]
+          newtext += alphabet[(alphabet.index(char) + B) % message.modulus]
           count+= 1
         else:
           newtext += char
@@ -171,12 +172,45 @@ use inverse_keyword to revert back and encrypt again
 """
       if not isinstance(message,Message): return 'bad Message'
       alphabet = message.alphabet
-      mod = message.mod
-      newkeyword = ''.join([alphabet[((mod - alphabet.index(letter)) % mod)]
+      modulus = message.modulus
+      newkeyword = ''.join([alphabet[((modulus - alphabet.index(letter)) % modulus)]
                           for letter in self.keyword])
       self.change_keyword(newkeyword)
       return self.vig(message)
-    
+  
+    def crack(self,message):
+        E = message.strip()
+#Find the highest correlation of data with shifts of itself (shifts of 1 to 20)
+        shifts = 20
+        shift_cor = E.shift_test(shifts)[3:]
+        keylength = shift_cor.index(max(shift_cor)) + 3
+#        print 'keylength = ', keylength
+#Group data mod the keylength. Analize frequencies to find likely shift for each group.
+#This is a weak spot if a multiple of the keylength is determined then the data per group is
+#less and therefore analysis is less accurate.
+        groups = E.groups(keylength)
+        group_freq = [ Message(groups[i]).frequencies() for i in range(keylength) ]
+        keyword = self.find_keyword(E,keylength,groups,group_freq)
+        return keyword
+      
+    def find_keyword(self,message,keylength,groups,group_freq):
+        keyword=Message('')
+        for i in range(keylength):
+             shift = message.shift_correlation(group_freq[i],eng_freq)
+             shift.sort(key = lambda x: x[1], reverse=True)
+             keyword += message.alphabet[ -shift[0][0] ]
+        factors = []
+#Look for repeating pattern in keyword and reduce accordingly        
+        for f in range(3,keylength):
+             if keylength % f == 0: factors += [f]
+        for f in factors:
+          sub = keyword[:f]
+          if len(sub)*keyword.find_all(sub) == len(keyword):
+            keyword = sub
+            break
+        self.change_keyword(keyword)
+        return keyword
+     
                                             
 class HillCipher(Cipher):
   
@@ -189,7 +223,7 @@ class HillCipher(Cipher):
         dim = self.dim
         ciphernumbers = message.to_integers()
         return [ [ciphernumbers[i] for i in range(dim*j,dim*(j+1))]
-              for j in range(len(ciphernumbers)//dim)] |mod| message.mod
+              for j in range(len(ciphernumbers)//dim)] |mod| message.modulus
 
     def encrypt(self,message):
         alphabet = message.alphabet
