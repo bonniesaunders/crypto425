@@ -16,11 +16,8 @@ class Message(str):
       self.alphabet = alphabet
       self.modulus = len(alphabet)
       self.string = str(self)
-      self.string_locations = {}
-      if message == '':
-          self.m2n = 0
-      else:
-          self.number = self.m2n()
+#      self.string_locations = {}
+      self.number = self.m2n()
 
   def __repr__(self):
       return '*{}*'.format(self.string)
@@ -124,6 +121,7 @@ class Message(str):
       '''Each character in the string is replaced by it's ascii 2-hexdigit code.
   The resulting long string is interrupted as an hexadeciaml number and returned as an integer.
   '''
+      if self.string == '': return None
       return int(self.string.encode('hex'),16)
 
   m2n = message_to_number

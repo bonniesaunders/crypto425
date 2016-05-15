@@ -6,24 +6,27 @@ class Cipher:
 
   def encrypt(self, plaintext):
       """
-      Return encrypted version of text.
+      Encrypt 'plaintext' and return 'ciphertext'
       """
+      if not isinstance(plaintext,Message): return 'Plaintext is not Message instance'
       # Subclasses override this.
-      ciphertext=''
+      ciphertext = Message('',plaintext.alphabet)
       return ciphertext
 
   def decrypt(self, ciphertext):
       """
-      Return decrypted version of text.
+      Decrypt 'ciphertext and return 'plaintext'.
       """
+      if not isinstance(ciphertext,Message): return 'Plaintext is not Message instance'
       plaintext=''
       # Subclasses override this.
       return plaintext
 
   def crack(self, ciphertext):
       """
-      Return decrypted version of textand the key.
+      Return decrypted version of text and the key.
       """
+      if not isinstance(ciphertext,Message): return 'Plaintext is not Message instance'
       plaintext=''
       key = ''
       # Subclasses override this.
@@ -53,15 +56,14 @@ class AffineCipher(Cipher):
         return ( "m is relatively prime to the length of the alphabet. "
         "m is a good multiplicative key." )
 
-    def ciphertable(self, alphabet):
+    def ciphertable(self, alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ'):
         cipheralphabet = self.encrypt(Message(alphabet,alphabet))
-        print ''.join( ['{:2}'.format(x) for x in alphabet])
-        print ''.join( ['{:2}'.format(x) for x in cipheralphabet])
+        return ''.join( ['{:2}'.format(x) for x in alphabet]),''.join( ['{:2}'.format(x) for x in cipheralphabet])
 
 
     def affine(self, message, m , b):
         """
-        transforms text by multiplying by m and then adding b
+        Apply affine cipher with key multiplicative key m and additive key b
         """
         alphabet = message.alphabet
         modulus = message.modulus
@@ -72,7 +74,7 @@ class AffineCipher(Cipher):
            
     def encrypt(self,message):
         """
-        Encrypts by affine cipher, key x(m,b)
+        Encrypts by affine cipher, key (m,b)
         """
         if not isinstance(message,Message): return 'bad Message'
         return self.affine(message,self.m,self.b)
@@ -103,11 +105,13 @@ class Caesar(AffineCipher):
         """
         alphabet = message.alphabet
         modulus = message.modulus
+        list = []
         for j in range(modulus):
             newtext=''
             for i in range(len(message)):
                 newtext += alphabet[(alphabet.index(message[i])-j)%modulus]
-            print 'key = {:2}: '.format(j), newtext
+            list.append( 'key = {:2}: '.format(j) + newtext )
+        return list
 
 class SubstitutionCipher(Cipher):
 
@@ -170,7 +174,7 @@ class Vigenere(Cipher):
 decrypting will change the keyword to the decrypting keyword
 use inverse_keyword to revert back and encrypt again
 """
-      if not isinstance(message,Message): return 'bad Message'
+      if not isinstance(message,Message): return 'message must be Message instance'
       alphabet = message.alphabet
       modulus = message.modulus
       newkeyword = ''.join([alphabet[((modulus - alphabet.index(letter)) % modulus)]
@@ -184,14 +188,13 @@ use inverse_keyword to revert back and encrypt again
         shifts = 20
         shift_cor = E.shift_test(shifts)[3:]
         keylength = shift_cor.index(max(shift_cor)) + 3
-#        print 'keylength = ', keylength
 #Group data mod the keylength. Analize frequencies to find likely shift for each group.
-#This is a weak spot if a multiple of the keylength is determined then the data per group is
-#less and therefore analysis is less accurate.
+#This is a weak spot if a multiple of the keylength is determined then the data per
+#group is less and therefore analysis is less accurate.
         groups = E.groups(keylength)
         group_freq = [ Message(groups[i]).frequencies() for i in range(keylength) ]
         keyword = self.find_keyword(E,keylength,groups,group_freq)
-        return keyword
+        return keyword, self.decrypt(message)
       
     def find_keyword(self,message,keylength,groups,group_freq):
         keyword=Message('')
@@ -210,8 +213,7 @@ use inverse_keyword to revert back and encrypt again
             break
         self.change_keyword(keyword)
         return keyword
-     
-                                            
+                                               
 class HillCipher(Cipher):
   
     def __init__(self, matrix=Matmod([[1,2],[2,1]],26)):
